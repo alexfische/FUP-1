@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { SteinformatData } from './types';
 import Formular from './components/Formular';
 import FormularListe from './components/FormularListe';
 import { PlusIcon, ScanIcon, ImportIcon, ExportIcon } from './components/Icons';
+import { useLanguage } from './contexts/LanguageContext';
 
 const App: React.FC = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [forms, setForms] = useState<SteinformatData[]>([]);
   const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'form'>('list');
@@ -69,7 +70,7 @@ const App: React.FC = () => {
   };
   
   const handleDelete = (id: string) => {
-    if (window.confirm('Sind Sie sicher, dass Sie dieses Formular löschen möchten?')) {
+    if (window.confirm(t('confirmDeleteBody'))) {
         const updatedForms = forms.filter(f => f.id !== id);
         setForms(updatedForms);
         saveFormsToLocalStorage(updatedForms);
@@ -141,7 +142,7 @@ const App: React.FC = () => {
 
       } catch (error) {
           console.error("Fehler bei der Analyse des Formulars:", error);
-          alert("Das Formular konnte nicht automatisch ausgelesen werden. Bitte füllen Sie es manuell aus.");
+          alert(t('scanError'));
       } finally {
           setIsLoading(false);
       }
@@ -163,7 +164,7 @@ const App: React.FC = () => {
 
   const handleExport = () => {
     if (forms.length === 0) {
-      alert("Es gibt keine Formulare zum Exportieren.");
+      alert(t('noFormsToExport'));
       return;
     }
     const jsonString = JSON.stringify(forms, null, 2);
@@ -198,18 +199,18 @@ const App: React.FC = () => {
         const newForms = importedForms.filter(f => f.id && !existingIds.has(f.id));
 
         if (newForms.length === 0) {
-            alert("Keine neuen Formulare zum Importieren gefunden. Alle Formulare in der Datei existieren bereits.");
+            alert(t('importNoNewForms'));
             return;
         }
 
         const updatedForms = [...forms, ...newForms];
         setForms(updatedForms);
         saveFormsToLocalStorage(updatedForms);
-        alert(`${newForms.length} neue(s) Formular(e) erfolgreich importiert.`);
+        alert(t('importSuccess').replace('{count}', newForms.length.toString()));
 
       } catch (error) {
         console.error("Fehler beim Importieren der Datei:", error);
-        alert(`Fehler beim Importieren: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+        alert(`${t('importError')}: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
       } finally {
         if (event.target) {
           event.target.value = '';
@@ -237,13 +238,24 @@ const App: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-gray-700 font-semibold">Formular wird analysiert...</p>
+            <p className="text-gray-700 font-semibold">{t('loadingMessage')}</p>
           </div>
         </div>
       )}
       <header className="bg-white shadow-md sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-700">Steinplan-Formular</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-700">{t('appTitle')}</h1>
+            <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'de' | 'en' | 'ru')}
+                className="bg-white border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+              </select>
+          </div>
           {view === 'list' && (
              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <input
@@ -266,28 +278,28 @@ const App: React.FC = () => {
                     className="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
                 >
                     <ImportIcon />
-                    Daten Importieren
+                    {t('importData')}
                 </button>
                  <button
                     onClick={handleExport}
                     className="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
                 >
                     <ExportIcon />
-                    Daten Exportieren
+                    {t('exportData')}
                 </button>
                 <button
                     onClick={() => scanFileInputRef.current?.click()}
                     className="flex items-center gap-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
                 >
                     <ScanIcon />
-                    Formular einscannen
+                    {t('scanForm')}
                 </button>
                 <button
                     onClick={handleCreateNew}
                     className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
                 >
                     <PlusIcon />
-                    Neu Anlegen
+                    {t('createNew')}
                 </button>
              </div>
           )}

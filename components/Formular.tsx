@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SteinformatData } from '../types';
 import { SaveIcon, CancelIcon, CameraIcon, XMarkIcon } from './Icons';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface FormularProps {
   initialData: SteinformatData | null;
@@ -60,7 +61,7 @@ const VortriebInput = ({ name, defaultValue, readOnly, className }: { name: stri
     />
 );
 
-const BooleanSelect = ({ label, name, defaultValue, readOnly }: { label: string, name: string, defaultValue: string, readOnly: boolean }) => (
+const BooleanSelect = ({ label, name, defaultValue, readOnly, t }: { label: string, name: string, defaultValue: string, readOnly: boolean, t: (key: any) => string }) => (
     <div className="flex flex-col">
         <label htmlFor={name} className="mb-1 text-sm font-medium text-gray-700">{label}</label>
         <select
@@ -70,13 +71,14 @@ const BooleanSelect = ({ label, name, defaultValue, readOnly }: { label: string,
             disabled={readOnly}
             className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 ${readOnly ? 'cursor-not-allowed' : ''}`}
         >
-            <option value="Ein">Ein</option>
-            <option value="Aus">Aus</option>
+            <option value="Ein">{t('ein')}</option>
+            <option value="Aus">{t('aus')}</option>
         </select>
     </div>
 );
 
 const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, readOnly = false }) => {
+  const { t } = useLanguage();
   const [defaultValues, setDefaultValues] = useState<Omit<SteinformatData, 'id'> & { id?: string }>(
     initialData || createEmptyForm()
   );
@@ -118,7 +120,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
       const win = window.open();
       if (win) {
           win.document.write(`<img src="${imgSrc}" style="max-width:100%;" />`);
-          win.document.title = "Bildansicht";
+          win.document.title = t('imagePreviewTitle');
       }
   };
 
@@ -153,24 +155,24 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
       <div className="border-b pb-4 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
             <div className="md:col-span-1">
-                <InputField label="ESP №" name="espNr" defaultValue={defaultValues.espNr} readOnly={readOnly} />
+                <InputField label={t('espNrLabel')} name="espNr" defaultValue={defaultValues.espNr} readOnly={readOnly} />
             </div>
             <div className="md:col-span-2">
-                <InputField label="Format-Bezeichnung" name="formatBezeichnung" defaultValue={defaultValues.formatBezeichnung} readOnly={readOnly} />
+                <InputField label={t('formatBezeichnung')} name="formatBezeichnung" defaultValue={defaultValues.formatBezeichnung} readOnly={readOnly} />
             </div>
             <div className="md:col-span-2">
-                <InputField label="Beschriftung auf dem Stein" name="beschriftungAufDemStein" defaultValue={defaultValues.beschriftungAufDemStein} readOnly={readOnly} />
+                <InputField label={t('beschriftungAufDemStein')} name="beschriftungAufDemStein" defaultValue={defaultValues.beschriftungAufDemStein} readOnly={readOnly} />
             </div>
             <div className="grid grid-cols-2 gap-4 md:col-span-1">
-                <InputField label="Material" name="material" defaultValue={defaultValues.material} readOnly={readOnly} />
-                <InputField label="Datum" name="datum" type="date" defaultValue={defaultValues.datum} readOnly={readOnly} />
+                <InputField label={t('materialLabel')} name="material" defaultValue={defaultValues.material} readOnly={readOnly} />
+                <InputField label={t('datumLabel')} name="datum" type="date" defaultValue={defaultValues.datum} readOnly={readOnly} />
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
             <div className="flex flex-col">
-                <InputField label="Abmessungen (L x B x H)" name="abmessungen" defaultValue={defaultValues.abmessungen} readOnly={readOnly} />
+                <InputField label={t('abmessungen')} name="abmessungen" defaultValue={defaultValues.abmessungen} readOnly={readOnly} />
                 <div className="mt-4">
-                    <label className="mb-1 text-sm font-medium text-gray-700">Pressprogramm wählen</label>
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('pressprogrammWaehlen')}</label>
                     <select
                         name="pressprogramm"
                         value={pressProgramm}
@@ -178,15 +180,15 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                         disabled={readOnly}
                         className={`w-full bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
                     >
-                        <option value="">Bitte wählen...</option>
-                        <option value="Presse ohne Siebmischer,Tonreiniger">Presse ohne Siebmischer,Tonreiniger</option>
-                        <option value="Presse+Siebmischer">Presse+Siebmischer</option>
-                        <option value="Presse+Siebmischer+Tonreiniger">Presse+Siebmischer+Tonreiniger</option>
+                        <option value="">{t('bitteWaehlen')}</option>
+                        <option value="Presse ohne Siebmischer,Tonreiniger">{t('presseOhne')}</option>
+                        <option value="Presse+Siebmischer">{t('presseMitSiebmischer')}</option>
+                        <option value="Presse+Siebmischer+Tonreiniger">{t('presseMitSiebmischerTonreiniger')}</option>
                     </select>
                 </div>
             </div>
-            <InputField label="Mundstück - Nr." name="mundstueckNr" defaultValue={defaultValues.mundstueckNr} readOnly={readOnly} />
-            <InputField label="Presskopf" name="presskopf" defaultValue={defaultValues.presskopf} readOnly={readOnly} />
+            <InputField label={t('mundstueckNr')} name="mundstueckNr" defaultValue={defaultValues.mundstueckNr} readOnly={readOnly} />
+            <InputField label={t('presskopf')} name="presskopf" defaultValue={defaultValues.presskopf} readOnly={readOnly} />
         </div>
       </div>
 
@@ -195,7 +197,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
         
         {/* Grundeinstellung Vortrieb - Flexbox Layout */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
-            <legend className="text-lg font-semibold text-gray-700 px-2">Grundeinstellung Vortrieb</legend>
+            <legend className="text-lg font-semibold text-gray-700 px-2">{t('grundeinstellungVortrieb')}</legend>
             <div className="flex justify-center mt-4">
                  <div className="flex flex-col items-center gap-4 bg-gray-100 p-6 rounded-lg border border-gray-200">
                     {/* Top Row - Horizontal */}
@@ -241,7 +243,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
 
         {/* Sonstige Einstellungen und Hilfsmittel */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
-            <legend className="text-lg font-semibold text-gray-700 px-2">Sonstige Einstellungen und Hilfsmittel</legend>
+            <legend className="text-lg font-semibold text-gray-700 px-2">{t('sonstigeEinstellungen')}</legend>
             <div className="space-y-4">
                 <textarea
                     name="sonstigeEinstellungen"
@@ -252,13 +254,13 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                 />
                 
                 <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Fotos von Hilfsmitteln</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">{t('fotosVonHilfsmitteln')}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {images.map((img, index) => (
                             <div key={index} className="relative group w-full h-24 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                                 <img 
                                     src={img} 
-                                    alt={`Hilfsmittel ${index + 1}`} 
+                                    alt={`${t('fotosVonHilfsmitteln')} ${index + 1}`} 
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-150 group-hover:z-50 group-hover:shadow-xl origin-center relative z-10"
                                 />
                                 <div className="absolute inset-0 z-20 flex items-end justify-center pb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
@@ -267,7 +269,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                                         onClick={() => handleOpenImage(img)}
                                         className="bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded pointer-events-auto"
                                      >
-                                        öffnen
+                                        {t('oeffnen')}
                                      </button>
                                 </div>
                                 {!readOnly && (
@@ -288,7 +290,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                                 className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
                             >
                                 <CameraIcon />
-                                <span className="text-xs mt-1 text-center px-1">Foto von Hilfsmitteln hinzufügen</span>
+                                <span className="text-xs mt-1 text-center px-1">{t('fotoHinzufuegen')}</span>
                             </button>
                         )}
                         <input
@@ -306,19 +308,18 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
 
         {/* Presse */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
-            <legend className="text-lg font-semibold text-gray-700 px-2">Presse</legend>
+            <legend className="text-lg font-semibold text-gray-700 px-2">{t('presse')}</legend>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <InputField label="Austrag" name="austrag" defaultValue={defaultValues.austrag} readOnly={readOnly} />
-                <InputField label="Schnittlänge (nass)" name="schnittlaengeNass" defaultValue={defaultValues.schnittlaengeNass} readOnly={readOnly} />
+                <InputField label={t('austrag')} name="austrag" defaultValue={defaultValues.austrag} readOnly={readOnly} />
+                <InputField label={t('schnittlaengeNass')} name="schnittlaengeNass" defaultValue={defaultValues.schnittlaengeNass} readOnly={readOnly} />
                 
                 {!hideSiebmischerGroup ? (
                     <>
-                        <InputField label="Siebmischer" name="siebmischer" defaultValue={defaultValues.siebmischer} readOnly={readOnly} />
-                        <InputField label="Wasser Siebmischer" name="wasserSiebmischer" defaultValue={defaultValues.wasserSiebmischer} readOnly={readOnly} />
-                        <InputField label="Dampf Siebmischer" name="dampfSiebmischer" defaultValue={defaultValues.dampfSiebmischer} readOnly={readOnly} />
+                        <InputField label={t('siebmischer')} name="siebmischer" defaultValue={defaultValues.siebmischer} readOnly={readOnly} />
+                        <InputField label={t('wasserSiebmischer')} name="wasserSiebmischer" defaultValue={defaultValues.wasserSiebmischer} readOnly={readOnly} />
+                        <InputField label={t('dampfSiebmischer')} name="dampfSiebmischer" defaultValue={defaultValues.dampfSiebmischer} readOnly={readOnly} />
                     </>
                 ) : (
-                    // Placeholders to keep grid structure if needed, or leave empty to reflow
                     <>
                         <div className="hidden md:block"></div>
                         <div className="hidden md:block"></div>
@@ -326,20 +327,20 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                     </>
                 )}
 
-                <InputField label="Gewicht (nass)" name="gewichtNass" defaultValue={defaultValues.gewichtNass} readOnly={readOnly} />
+                <InputField label={t('gewichtNass')} name="gewichtNass" defaultValue={defaultValues.gewichtNass} readOnly={readOnly} />
                 
-                <InputField label="Mischer" name="mischer" defaultValue={defaultValues.mischer} readOnly={readOnly} />
-                <InputField label="Wasser Mischer" name="wasserMischer" defaultValue={defaultValues.wasserMischer} readOnly={readOnly} />
-                <InputField label="Dampf Mischer" name="dampfMischer" defaultValue={defaultValues.dampfMischer} readOnly={readOnly} />
+                <InputField label={t('mischer')} name="mischer" defaultValue={defaultValues.mischer} readOnly={readOnly} />
+                <InputField label={t('wasserMischer')} name="wasserMischer" defaultValue={defaultValues.wasserMischer} readOnly={readOnly} />
+                <InputField label={t('dampfMischer')} name="dampfMischer" defaultValue={defaultValues.dampfMischer} readOnly={readOnly} />
 
-                <InputField label="Pressendruck" name="pressendruck" defaultValue={defaultValues.pressendruck} readOnly={readOnly} />
-                <InputField label="Presse" name="presse" defaultValue={defaultValues.presse} readOnly={readOnly} />
+                <InputField label={t('pressendruck')} name="pressendruck" defaultValue={defaultValues.pressendruck} readOnly={readOnly} />
+                <InputField label={t('presseField')} name="presse" defaultValue={defaultValues.presse} readOnly={readOnly} />
                 
                 {!hideTonreinigerGroup ? (
                     <>
-                         <InputField label="Tonreiniger" name="tonreiniger" defaultValue={defaultValues.tonreiniger} readOnly={readOnly} />
-                         <InputField label="Schnecke" name="schnecke" defaultValue={defaultValues.schnecke} readOnly={readOnly} />
-                         <InputField label="Rostkorb" name="rostkorb" defaultValue={defaultValues.rostkorb} readOnly={readOnly} />
+                         <InputField label={t('tonreiniger')} name="tonreiniger" defaultValue={defaultValues.tonreiniger} readOnly={readOnly} />
+                         <InputField label={t('schnecke')} name="schnecke" defaultValue={defaultValues.schnecke} readOnly={readOnly} />
+                         <InputField label={t('rostkorb')} name="rostkorb" defaultValue={defaultValues.rostkorb} readOnly={readOnly} />
                     </>
                 ) : (
                      <>
@@ -349,52 +350,52 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                      </>
                 )}
 
-                <InputField label="Styropor" name="styropor" defaultValue={defaultValues.styropor} readOnly={readOnly} />
+                <InputField label={t('styropor')} name="styropor" defaultValue={defaultValues.styropor} readOnly={readOnly} />
             </div>
         </fieldset>
 
         {/* Abschneider */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
-             <legend className="text-lg font-semibold text-gray-700 px-2">Abschneider</legend>
+             <legend className="text-lg font-semibold text-gray-700 px-2">{t('abschneider')}</legend>
              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex flex-col">
-                    <label className="mb-1 text-sm font-medium text-gray-700">Abschneidetisch</label>
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('abschneidetisch')}</label>
                     <select
                         name="abschneidetisch"
                         defaultValue={defaultValues.abschneidetisch}
                         disabled={readOnly}
                         className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
                     >
-                        <option value="Normal">Normal</option>
-                        <option value="Deckenziegel">Deckenziegel</option>
-                        <option value="Juwö">Juwö</option>
+                        <option value="Normal">{t('normal')}</option>
+                        <option value="Deckenziegel">{t('deckenziegel')}</option>
+                        <option value="Juwö">{t('juwo')}</option>
                     </select>
                 </div>
 
-                <InputField label="Freimatik-Produktname" name="freimatikProduktname" defaultValue={defaultValues.freimatikProduktname} readOnly={readOnly} />
-                <InputField label="Hubhöhe" name="hubhoehe" defaultValue={defaultValues.hubhoehe} readOnly={readOnly} />
-                <InputField label="Schnittlänge" name="schnittlaenge" defaultValue={defaultValues.schnittlaenge} readOnly={readOnly} />
-                <InputField label="Vorschub" name="vorschub" defaultValue={defaultValues.vorschub} readOnly={readOnly} />
+                <InputField label={t('freimatikProduktname')} name="freimatikProduktname" defaultValue={defaultValues.freimatikProduktname} readOnly={readOnly} />
+                <InputField label={t('hubhoehe')} name="hubhoehe" defaultValue={defaultValues.hubhoehe} readOnly={readOnly} />
+                <InputField label={t('schnittlaenge')} name="schnittlaenge" defaultValue={defaultValues.schnittlaenge} readOnly={readOnly} />
+                <InputField label={t('vorschub')} name="vorschub" defaultValue={defaultValues.vorschub} readOnly={readOnly} />
                 
-                <BooleanSelect label="Drehvorrichtung" name="drehvorrichtung" defaultValue={defaultValues.drehvorrichtung} readOnly={readOnly} />
+                <BooleanSelect label={t('drehvorrichtung')} name="drehvorrichtung" defaultValue={defaultValues.drehvorrichtung} readOnly={readOnly} t={t} />
                 
-                <InputField label="Anzahl Schneidedrähte" name="anzahlSchneidedraehte" defaultValue={defaultValues.anzahlSchneidedraehte} readOnly={readOnly} />
-                <InputField label="Offset Drehvorr." name="offsetDrehvorr" defaultValue={defaultValues.offsetDrehvorr} readOnly={readOnly} />
-                <InputField label="Drahtabstand" name="drahtabstand" defaultValue={defaultValues.drahtabstand} readOnly={readOnly} />
-                <InputField label="Geschwin. Lingl Bandbrücke" name="geschwLinglBandbruecke" defaultValue={defaultValues.geschwLinglBandbruecke} readOnly={readOnly} />
-                <InputField label="Abziehblech Nr." name="abziehblechNr" defaultValue={defaultValues.abziehblechNr} readOnly={readOnly} />
+                <InputField label={t('anzahlSchneidedraehte')} name="anzahlSchneidedraehte" defaultValue={defaultValues.anzahlSchneidedraehte} readOnly={readOnly} />
+                <InputField label={t('offsetDrehvorr')} name="offsetDrehvorr" defaultValue={defaultValues.offsetDrehvorr} readOnly={readOnly} />
+                <InputField label={t('drahtabstand')} name="drahtabstand" defaultValue={defaultValues.drahtabstand} readOnly={readOnly} />
+                <InputField label={t('geschwLinglBandbruecke')} name="geschwLinglBandbruecke" defaultValue={defaultValues.geschwLinglBandbruecke} readOnly={readOnly} />
+                <InputField label={t('abziehblechNr')} name="abziehblechNr" defaultValue={defaultValues.abziehblechNr} readOnly={readOnly} />
                 
-                <BooleanSelect label="Drahtreiniger" name="drahtreiniger" defaultValue={defaultValues.drahtreiniger} readOnly={readOnly} />
+                <BooleanSelect label={t('drahtreiniger')} name="drahtreiniger" defaultValue={defaultValues.drahtreiniger} readOnly={readOnly} t={t} />
                 
-                <InputField label="Schablone Nr." name="schabloneNr" defaultValue={defaultValues.schabloneNr} readOnly={readOnly} />
+                <InputField label={t('schabloneNr')} name="schabloneNr" defaultValue={defaultValues.schabloneNr} readOnly={readOnly} />
                 
-                <BooleanSelect label="Abfall-Auswerfer" name="abfallAuswerfer" defaultValue={defaultValues.abfallAuswerfer} readOnly={readOnly} />
+                <BooleanSelect label={t('abfallAuswerfer')} name="abfallAuswerfer" defaultValue={defaultValues.abfallAuswerfer} readOnly={readOnly} t={t} />
                 
-                <InputField label="Drahtdurchmesser" name="drahtdurchmesser" defaultValue={defaultValues.drahtdurchmesser} readOnly={readOnly} />
+                <InputField label={t('drahtdurchmesser')} name="drahtdurchmesser" defaultValue={defaultValues.drahtdurchmesser} readOnly={readOnly} />
                 
-                <BooleanSelect label="Drahtnachzug" name="drahtnachzug" defaultValue={defaultValues.drahtnachzug} readOnly={readOnly} />
+                <BooleanSelect label={t('drahtnachzug')} name="drahtnachzug" defaultValue={defaultValues.drahtnachzug} readOnly={readOnly} t={t} />
                 
-                <InputField label="Geschw. für nachf. Band" name="geschwFuerNachfBand" defaultValue={defaultValues.geschwFuerNachfBand} readOnly={readOnly} />
+                <InputField label={t('geschwFuerNachfBand')} name="geschwFuerNachfBand" defaultValue={defaultValues.geschwFuerNachfBand} readOnly={readOnly} />
              </div>
         </fieldset>
       </div>
@@ -408,14 +409,14 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
               className="flex items-center gap-2 px-6 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
             >
               <CancelIcon />
-              Abbrechen
+              {t('abbrechen')}
             </button>
             <button
               type="submit"
               className="flex items-center gap-2 px-6 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
             >
               <SaveIcon />
-              Speichern
+              {t('speichern')}
             </button>
           </div>
       )}
@@ -426,7 +427,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                   onClick={onCancel}
                   className="flex items-center gap-2 px-6 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
               >
-                  Zurück zur Liste
+                  {t('zurueckZurListe')}
               </button>
           </div>
       )}
