@@ -1,0 +1,17 @@
+{
+  "name": "Steinplan-Formular",
+  "short_name": "Steinplan",
+  "description": "Eine Anwendung zur digitalen Erfassung, Speicherung und Suche von Maschinen-Einstellparametern.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#EA5A00",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'%3E%3Crect width='500' height='500' rx='80' fill='%23EA5A00'/%3E%3Ctext x='50%25' y='220' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold' font-size='52' letter-spacing='2'%3ESCHLAGMANN%3C/text%3E%3Ctext x='50%25' y='310' text-anchor='middle' fill='black' font-family='Arial, sans-serif' font-weight='900' font-size='85'%3EPOROTON%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

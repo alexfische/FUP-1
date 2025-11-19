@@ -1,0 +1,7 @@
+{
+  "name": "Maschinen-Einstellparameter für Steinformate Beta 1.0",
+  "description": "Eine Anwendung zur digitalen Erfassung, Speicherung und Suche von Maschinen-Einstellparametern für Steinformationen, basierend auf einem physischen Formular.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
