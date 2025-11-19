@@ -4,7 +4,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { SteinformatData } from './types';
 import Formular from './components/Formular';
 import FormularListe from './components/FormularListe';
-import { PlusIcon, ScanIcon } from './components/Icons';
+import { PlusIcon, ScanIcon, ImportIcon, ExportIcon } from './components/Icons';
 
 const App: React.FC = () => {
   const [forms, setForms] = useState<SteinformatData[]>([]);
@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [scannedInitialData, setScannedInitialData] = useState<SteinformatData | null>(null);
   const scanFileInputRef = useRef<HTMLInputElement>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -160,6 +161,64 @@ const App: React.FC = () => {
       event.target.value = '';
   };
 
+  const handleExport = () => {
+    if (forms.length === 0) {
+      alert("Es gibt keine Formulare zum Exportieren.");
+      return;
+    }
+    const jsonString = JSON.stringify(forms, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `steinplan-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') throw new Error("Dateiinhalt ist ungültig.");
+        
+        const importedForms: SteinformatData[] = JSON.parse(text);
+
+        if (!Array.isArray(importedForms)) {
+            throw new Error("Die JSON-Datei muss ein Array von Formularen enthalten.");
+        }
+
+        const existingIds = new Set(forms.map(f => f.id));
+        const newForms = importedForms.filter(f => f.id && !existingIds.has(f.id));
+
+        if (newForms.length === 0) {
+            alert("Keine neuen Formulare zum Importieren gefunden. Alle Formulare in der Datei existieren bereits.");
+            return;
+        }
+
+        const updatedForms = [...forms, ...newForms];
+        setForms(updatedForms);
+        saveFormsToLocalStorage(updatedForms);
+        alert(`${newForms.length} neue(s) Formular(e) erfolgreich importiert.`);
+
+      } catch (error) {
+        console.error("Fehler beim Importieren der Datei:", error);
+        alert(`Fehler beim Importieren: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      } finally {
+        if (event.target) {
+          event.target.value = '';
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const selectedForm = useMemo(() => {
     return forms.find(f => f.id === selectedFormId) || null;
   }, [forms, selectedFormId]);
@@ -186,8 +245,15 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-700">Steinplan-Formular</h1>
           {view === 'list' && (
-             <div className="flex items-center gap-4">
+             <div className="flex items-center gap-2 flex-wrap justify-end">
                 <input
+                  type="file"
+                  ref={importFileInputRef}
+                  onChange={handleImport}
+                  accept=".json"
+                  className="hidden"
+                />
+                 <input
                   type="file"
                   ref={scanFileInputRef}
                   onChange={handleFileSelectedForScan}
@@ -195,6 +261,20 @@ const App: React.FC = () => {
                   capture="environment"
                   className="hidden"
                 />
+                <button
+                    onClick={() => importFileInputRef.current?.click()}
+                    className="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
+                >
+                    <ImportIcon />
+                    Daten Importieren
+                </button>
+                 <button
+                    onClick={handleExport}
+                    className="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
+                >
+                    <ExportIcon />
+                    Daten Exportieren
+                </button>
                 <button
                     onClick={() => scanFileInputRef.current?.click()}
                     className="flex items-center gap-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-transform transform hover:scale-105"
