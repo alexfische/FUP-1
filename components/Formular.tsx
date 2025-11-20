@@ -11,14 +11,18 @@ interface FormularProps {
 }
 
 const createEmptyForm = (): Omit<SteinformatData, 'id'> => ({
-    espNr: '', formatBezeichnung: '', beschriftungAufDemStein: '', material: '', datum: new Date().toISOString().split('T')[0], abmessungen: '',
-    mundstueckNr: '', presskopf: '', sonstigeEinstellungen: '', pressprogramm: '', hilfsmittelFotos: [],
+    artNr: '', formatBezeichnung: '', material: '', datum: new Date().toISOString().split('T')[0], abmessungen: '',
+    // Beschriftung
+    beschriftungSchlagmann: '', beschriftungCE: '', beschriftungRO: '', beschriftungT: '',
+    druckfestigkeit: '', beschriftungSchicht: '', beschriftungSchichtzeitraum: '', beschriftungDatum: '',
+    // Rest
+    mundstueckNr: '', presskopf: '', sonstigeEinstellungen: '', pressprogramm: '', zahnradAbschneider: '', hilfsmittelFotos: [],
     // Vortrieb
     vortriebOben1: '', vortriebOben2: '', vortriebOben3: '',
     vortriebUnten1: '', vortriebUnten2: '', vortriebUnten3: '',
     vortriebLinks1: '', vortriebLinks2: '', vortriebLinks3: '',
     vortriebRechts1: '', vortriebRechts2: '', vortriebRechts3: '',
-    vortriebZentrum: '',
+    vortriebZentrum: 'Mitte', presskopfLeiste: 'unten', mundstueckFoto: null,
     // Presse
     austrag: '', schnittlaengeNass: '',
     siebmischer: '', wasserSiebmischer: '', dampfSiebmischer: '',
@@ -29,13 +33,13 @@ const createEmptyForm = (): Omit<SteinformatData, 'id'> => ({
     // Abschneider
     abschneidetisch: 'Normal', freimatikProduktname: '', hubhoehe: '', schnittlaenge: '',
     vorschub: '', drehvorrichtung: 'Aus', anzahlSchneidedraehte: '', offsetDrehvorr: '', drahtabstand: '',
-    geschwLinglBandbruecke: '', abziehblechNr: '', drahtreiniger: 'Aus', schabloneNr: '', abfallAuswerfer: 'Aus',
-    drahtdurchmesser: '', drahtnachzug: 'Aus', geschwFuerNachfBand: ''
+    geschwLinglBandbruecke: '', abziehblechNr: '', drahtreiniger: 'Aus', schablone: '', schabloneninfo: '', abfallAuswerfer: 'Aus',
+    drahtdurchmesser: '', drahtnachzug: 'Aus', geschwFuerNachfBand: '', parameterFuerDrehteller: ''
 });
 
-const InputField = ({ label, name, defaultValue, readOnly, type = "text", step }: { label: string, name: string, defaultValue: any, readOnly: boolean, type?: string, step?: string }) => (
+const InputField = ({ label, name, defaultValue, readOnly, type = "text", step, small }: { label: string, name: string, defaultValue: any, readOnly: boolean, type?: string, step?: string, small?: boolean }) => (
   <div className="flex flex-col">
-    <label htmlFor={name} className="mb-1 text-sm font-medium text-gray-700">{label}</label>
+    <label htmlFor={name} className={`mb-1 text-sm font-medium text-gray-700 ${small ? 'text-xs' : ''}`}>{label}</label>
     <input
       type={type}
       id={name}
@@ -44,7 +48,7 @@ const InputField = ({ label, name, defaultValue, readOnly, type = "text", step }
       defaultValue={defaultValue}
       readOnly={readOnly}
       disabled={readOnly}
-      className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 transition-colors ${readOnly ? 'cursor-not-allowed' : ''}`}
+      className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 transition-colors ${readOnly ? 'cursor-not-allowed' : ''} ${small ? 'py-1 px-2 text-sm' : ''}`}
     />
   </div>
 );
@@ -77,20 +81,41 @@ const BooleanSelect = ({ label, name, defaultValue, readOnly, t }: { label: stri
     </div>
 );
 
+const BeschriftungSelect = ({ label, name, defaultValue, readOnly, t }: { label: string, name: string, defaultValue: any, readOnly: boolean, t: (key: any) => string }) => (
+    <div className="flex flex-col">
+        <label htmlFor={name} className="mb-1 text-xs font-medium text-gray-700">{label}</label>
+        <select
+            id={name}
+            name={name}
+            defaultValue={defaultValue}
+            disabled={readOnly}
+            className={`bg-white text-black border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 ${readOnly ? 'cursor-not-allowed' : ''}`}
+        >
+            <option value="">{t('bitteWaehlen')}</option>
+            <option value="mit">{t('mitOption')}</option>
+            <option value="ohne">{t('ohneOption')}</option>
+        </select>
+    </div>
+);
+
+
 const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, readOnly = false }) => {
   const { t } = useLanguage();
   const [defaultValues, setDefaultValues] = useState<Omit<SteinformatData, 'id'> & { id?: string }>(
     initialData || createEmptyForm()
   );
   const [images, setImages] = useState<string[]>([]);
+  const [mundstueckFoto, setMundstueckFoto] = useState<string | null>(null);
   const [pressProgramm, setPressProgramm] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mundstueckFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const empty = createEmptyForm();
     const data = initialData ? { ...empty, ...initialData } : empty;
     setDefaultValues(data);
     setImages(data.hilfsmittelFotos || []);
+    setMundstueckFoto(data.mundstueckFoto || null);
     setPressProgramm(data.pressprogramm || '');
   }, [initialData]);
 
@@ -115,6 +140,27 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
     if (readOnly) return;
     setImages(prev => prev.filter((_, i) => i !== index));
   };
+  
+  const handleMundstueckFotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (reader.result) {
+                setMundstueckFoto(reader.result as string);
+            }
+        };
+        reader.readAsDataURL(file as Blob);
+    }
+    e.target.value = '';
+  };
+
+  const removeMundstueckFoto = () => {
+    if (readOnly) return;
+    setMundstueckFoto(null);
+  };
+
 
   const handleOpenImage = (imgSrc: string) => {
       const win = window.open();
@@ -140,6 +186,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
 
     // Explicitly set fields that might be controlled by state or arrays
     data.hilfsmittelFotos = images;
+    data.mundstueckFoto = mundstueckFoto;
     data.pressprogramm = pressProgramm; // Ensure state value is saved
 
     onSave(data as SteinformatData);
@@ -153,15 +200,12 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
     <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg space-y-8">
       {/* Header Section */}
       <div className="border-b pb-4 mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="md:col-span-1">
-                <InputField label={t('espNrLabel')} name="espNr" defaultValue={defaultValues.espNr} readOnly={readOnly} />
+                <InputField label={t('artNrLabel')} name="artNr" defaultValue={defaultValues.artNr} readOnly={readOnly} />
             </div>
             <div className="md:col-span-2">
                 <InputField label={t('formatBezeichnung')} name="formatBezeichnung" defaultValue={defaultValues.formatBezeichnung} readOnly={readOnly} />
-            </div>
-            <div className="md:col-span-2">
-                <InputField label={t('beschriftungAufDemStein')} name="beschriftungAufDemStein" defaultValue={defaultValues.beschriftungAufDemStein} readOnly={readOnly} />
             </div>
             <div className="grid grid-cols-2 gap-4 md:col-span-1">
                 <InputField label={t('materialLabel')} name="material" defaultValue={defaultValues.material} readOnly={readOnly} />
@@ -169,26 +213,23 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+            <InputField label={t('abmessungen')} name="abmessungen" defaultValue={defaultValues.abmessungen} readOnly={readOnly} />
             <div className="flex flex-col">
-                <InputField label={t('abmessungen')} name="abmessungen" defaultValue={defaultValues.abmessungen} readOnly={readOnly} />
-                <div className="mt-4">
-                    <label className="mb-1 text-sm font-medium text-gray-700">{t('pressprogrammWaehlen')}</label>
-                    <select
-                        name="pressprogramm"
-                        value={pressProgramm}
-                        onChange={(e) => setPressProgramm(e.target.value)}
-                        disabled={readOnly}
-                        className={`w-full bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
-                    >
-                        <option value="">{t('bitteWaehlen')}</option>
-                        <option value="Presse ohne Siebmischer,Tonreiniger">{t('presseOhne')}</option>
-                        <option value="Presse+Siebmischer">{t('presseMitSiebmischer')}</option>
-                        <option value="Presse+Siebmischer+Tonreiniger">{t('presseMitSiebmischerTonreiniger')}</option>
-                    </select>
-                </div>
+                <label className="mb-1 text-sm font-medium text-gray-700">{t('pressprogrammWaehlen')}</label>
+                <select
+                    name="pressprogramm"
+                    value={pressProgramm}
+                    onChange={(e) => setPressProgramm(e.target.value)}
+                    disabled={readOnly}
+                    className={`w-full bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                >
+                    <option value="">{t('bitteWaehlen')}</option>
+                    <option value="Presse ohne Siebmischer,Tonreiniger">{t('presseOhne')}</option>
+                    <option value="Presse+Siebmischer">{t('presseMitSiebmischer')}</option>
+                    <option value="Presse+Siebmischer+Tonreiniger">{t('presseMitSiebmischerTonreiniger')}</option>
+                </select>
             </div>
             <InputField label={t('mundstueckNr')} name="mundstueckNr" defaultValue={defaultValues.mundstueckNr} readOnly={readOnly} />
-            <InputField label={t('presskopf')} name="presskopf" defaultValue={defaultValues.presskopf} readOnly={readOnly} />
         </div>
       </div>
 
@@ -198,8 +239,9 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
         {/* Grundeinstellung Vortrieb - Flexbox Layout */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
             <legend className="text-lg font-semibold text-gray-700 px-2">{t('grundeinstellungVortrieb')}</legend>
-            <div className="flex justify-center mt-4">
+            <div className="flex flex-col items-center gap-4">
                  <div className="flex flex-col items-center gap-4 bg-gray-100 p-6 rounded-lg border border-gray-200">
+                    <h3 className="text-md font-semibold text-gray-600 text-center">{t('bremsschieber')}</h3>
                     {/* Top Row - Horizontal */}
                     <div className="flex gap-4">
                         <VortriebInput name="vortriebOben1" defaultValue={defaultValues.vortriebOben1} readOnly={readOnly} />
@@ -214,14 +256,21 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                             <VortriebInput name="vortriebLinks2" defaultValue={defaultValues.vortriebLinks2} readOnly={readOnly} />
                             <VortriebInput name="vortriebLinks3" defaultValue={defaultValues.vortriebLinks3} readOnly={readOnly} />
                         </div>
-
-                        {/* Center - Larger */}
-                        <VortriebInput 
-                            name="vortriebZentrum" 
-                            defaultValue={defaultValues.vortriebZentrum} 
-                            readOnly={readOnly} 
-                            className="w-40 h-24 border-blue-500 border-2 font-bold text-xl" 
-                        />
+                        
+                        {/* Center Column with Label */}
+                        <div className="flex flex-col items-center">
+                            <label className="mb-1 text-sm font-medium text-gray-700">{t('mundstueckstellung')}</label>
+                            <select
+                                name="vortriebZentrum"
+                                defaultValue={defaultValues.vortriebZentrum}
+                                disabled={readOnly}
+                                className="w-28 h-10 bg-white text-black text-center border-blue-500 border-2 font-semibold text-base rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                            >
+                                <option value="Mitte">{t('mitte')}</option>
+                                <option value="Nach Rechts">{t('nachRechts')}</option>
+                                <option value="Nach Links">{t('nachLinks')}</option>
+                            </select>
+                        </div>
 
                         {/* Right Column - Vertical */}
                         <div className="flex flex-col gap-4">
@@ -238,6 +287,87 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                         <VortriebInput name="vortriebUnten3" defaultValue={defaultValues.vortriebUnten3} readOnly={readOnly} />
                     </div>
                  </div>
+                 <div className="flex flex-col pt-4 items-center w-full">
+                    <div className="flex flex-col items-center">
+                        <label className="mb-1 text-sm font-medium text-gray-700">{t('presskopfLeiste')}</label>
+                        <select
+                            name="presskopfLeiste"
+                            defaultValue={defaultValues.presskopfLeiste}
+                            disabled={readOnly}
+                            className={`w-32 bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                        >
+                            <option value="unten">{t('unten')}</option>
+                            <option value="oben">{t('oben')}</option>
+                        </select>
+                    </div>
+
+                    <div className="w-full border-t border-gray-200 mt-6 pt-4">
+                      <div className="flex justify-center">
+                          {mundstueckFoto ? (
+                              <div className="relative group w-48 h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                  <img 
+                                      src={mundstueckFoto} 
+                                      alt={t('mundstueckFotoAlt')}
+                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-150 group-hover:z-50 group-hover:shadow-xl origin-center relative z-10"
+                                  />
+                                  <div className="absolute inset-0 z-20 flex items-end justify-center pb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                       <button
+                                          type="button"
+                                          onClick={() => handleOpenImage(mundstueckFoto)}
+                                          className="bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded pointer-events-auto"
+                                       >
+                                          {t('oeffnen')}
+                                       </button>
+                                  </div>
+                                  {!readOnly && (
+                                      <button
+                                          type="button"
+                                          onClick={removeMundstueckFoto}
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 focus:outline-none z-50"
+                                      >
+                                          <XMarkIcon />
+                                      </button>
+                                  )}
+                              </div>
+                          ) : !readOnly ? (
+                              <button
+                                  type="button"
+                                  onClick={() => mundstueckFileInputRef.current?.click()}
+                                  className="flex flex-col items-center justify-center w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+                              >
+                                  <CameraIcon />
+                                  <span className="text-xs mt-1 text-center px-1">{t('fotoDesMundstuecksHinzufuegen')}</span>
+                              </button>
+                          ) : (
+                               <div className="flex items-center justify-center w-48 h-32 text-gray-400 text-sm">
+                                  {/* Placeholder for read-only empty state, can be styled or have text */}
+                               </div>
+                          )}
+                          <input
+                              type="file"
+                              ref={mundstueckFileInputRef}
+                              onChange={handleMundstueckFotoUpload}
+                              accept="image/*"
+                              className="hidden"
+                          />
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        {/* Beschriftung auf dem Stein - Moved and in-line */}
+        <fieldset className="border border-gray-200 rounded-lg p-4">
+            <legend className="text-lg font-semibold text-gray-700 px-2">{t('beschriftungAufDemStein')}</legend>
+            <div className="flex flex-row flex-wrap items-end gap-x-6 gap-y-4 pt-2">
+                <BeschriftungSelect label={t('schlagmannLabel')} name="beschriftungSchlagmann" defaultValue={defaultValues.beschriftungSchlagmann} readOnly={readOnly} t={t} />
+                <BeschriftungSelect label={t('ceLabel')} name="beschriftungCE" defaultValue={defaultValues.beschriftungCE} readOnly={readOnly} t={t} />
+                <BeschriftungSelect label={t('roLabel')} name="beschriftungRO" defaultValue={defaultValues.beschriftungRO} readOnly={readOnly} t={t} />
+                <BeschriftungSelect label={t('tLabel')} name="beschriftungT" defaultValue={defaultValues.beschriftungT} readOnly={readOnly} t={t} />
+                <InputField label={t('druckfestigkeitLabel')} name="druckfestigkeit" defaultValue={defaultValues.druckfestigkeit} readOnly={readOnly} type="number" step="0.01" small />
+                <BeschriftungSelect label={t('schichtLabel')} name="beschriftungSchicht" defaultValue={defaultValues.beschriftungSchicht} readOnly={readOnly} t={t} />
+                <BeschriftungSelect label={t('schichtzeitraumLabel')} name="beschriftungSchichtzeitraum" defaultValue={defaultValues.beschriftungSchichtzeitraum} readOnly={readOnly} t={t} />
+                <BeschriftungSelect label={t('datumBeschriftungLabel')} name="beschriftungDatum" defaultValue={defaultValues.beschriftungDatum} readOnly={readOnly} t={t} />
             </div>
         </fieldset>
 
@@ -387,7 +517,43 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                 
                 <BooleanSelect label={t('drahtreiniger')} name="drahtreiniger" defaultValue={defaultValues.drahtreiniger} readOnly={readOnly} t={t} />
                 
-                <InputField label={t('schabloneNr')} name="schabloneNr" defaultValue={defaultValues.schabloneNr} readOnly={readOnly} />
+                <div className="flex flex-col">
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('schablone')}</label>
+                    <select
+                        name="schablone"
+                        defaultValue={defaultValues.schablone}
+                        disabled={readOnly}
+                        className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                    >
+                        <option value="">{t('bitteWaehlen')}</option>
+                        <option value="DZ80">DZ80</option>
+                        <option value="DZ120">DZ120</option>
+                        <option value="DZ170">DZ170</option>
+                        <option value="DZ265">DZ265</option>
+                        <option value="Juwö19">Juwö19</option>
+                        <option value="Juwö215">Juwö215</option>
+                        <option value="Juwö240">Juwö240</option>
+                    </select>
+                </div>
+
+                <div className="flex flex-col">
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('schabloneninfo')}</label>
+                    <select
+                        name="schabloneninfo"
+                        defaultValue={defaultValues.schabloneninfo}
+                        disabled={readOnly}
+                        className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                    >
+                        <option value="">{t('bitteWaehlen')}</option>
+                        <option value="DZ 80 : gerade">DZ 80 : gerade</option>
+                        <option value="DZ 120 : 0mm bündig">DZ 120 : 0mm bündig</option>
+                        <option value="DZ 170 : 0mm bündig">DZ 170 : 0mm bündig</option>
+                        <option value="DZ 265 : 7mm tiefer">DZ 265 : 7mm tiefer</option>
+                        <option value="Juwö 190 : 25mm tiefer">Juwö 190 : 25mm tiefer</option>
+                        <option value="Juwö 215 : 7mm tiefer">Juwö 215 : 7mm tiefer</option>
+                        <option value="Juwö 240 : 7mm tiefer">Juwö 240 : 7mm tiefer</option>
+                    </select>
+                </div>
                 
                 <BooleanSelect label={t('abfallAuswerfer')} name="abfallAuswerfer" defaultValue={defaultValues.abfallAuswerfer} readOnly={readOnly} t={t} />
                 
@@ -396,6 +562,44 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                 <BooleanSelect label={t('drahtnachzug')} name="drahtnachzug" defaultValue={defaultValues.drahtnachzug} readOnly={readOnly} t={t} />
                 
                 <InputField label={t('geschwFuerNachfBand')} name="geschwFuerNachfBand" defaultValue={defaultValues.geschwFuerNachfBand} readOnly={readOnly} />
+
+                <div className="flex flex-col">
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('zahnradAbschneider')}</label>
+                    <select
+                        name="zahnradAbschneider"
+                        defaultValue={defaultValues.zahnradAbschneider}
+                        disabled={readOnly}
+                        className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                    >
+                        <option value="">{t('bitteWaehlen')}</option>
+                        <option value="23">23</option>
+                        <option value="24">24</option>
+                        <option value="25">25</option>
+                        <option value="26">26</option>
+                        <option value="27">27</option>
+                        <option value="28">28</option>
+                        <option value="31">31</option>
+                        <option value="35">35</option>
+                    </select>
+                </div>
+                
+                <div className="flex flex-col md:col-span-4 mt-2">
+                    <label className="mb-1 text-sm font-medium text-gray-700">{t('parameterFuerDrehteller')}</label>
+                    <select
+                        name="parameterFuerDrehteller"
+                        defaultValue={defaultValues.parameterFuerDrehteller}
+                        disabled={readOnly}
+                        className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                    >
+                        <option value="">{t('bitteWaehlen')}</option>
+                        <option value="[3 Drehteller] Haus, Brille, Werkzeug, Passwort, 97116, Haus, Datenblatt, PAR.CH, CH06, 0615, neu 80, speichern, log Out">
+                            [3 Drehteller] Haus, Brille, Werkzeug, Passwort, 97116, Haus, Datenblatt, PAR.CH, CH06, 0615, neu 80, speichern, log Out
+                        </option>
+                        <option value="[6 Drehteller]Haus, Brille, Werkzeug, Passwort, 97116, Haus, Datenblatt, PAR.CH, CH06, 0615, neu 40, speichern, log Out">
+                            [6 Drehteller]Haus, Brille, Werkzeug, Passwort, 97116, Haus, Datenblatt, PAR.CH, CH06, 0615, neu 40, speichern, log Out
+                        </option>
+                    </select>
+                </div>
              </div>
         </fieldset>
       </div>

@@ -1,8 +1,7 @@
 export interface SteinformatData {
   id: string;
-  espNr: string;
+  artNr: string;
   formatBezeichnung: string;
-  beschriftungAufDemStein: string;
   material: string;
   datum: string;
   abmessungen: string;
@@ -10,7 +9,19 @@ export interface SteinformatData {
   presskopf: string;
   sonstigeEinstellungen: string;
   pressprogramm: string;
+  zahnradAbschneider: string;
   hilfsmittelFotos: string[];
+  
+  // Beschriftung auf dem Stein Fields
+  beschriftungSchlagmann: string;
+  beschriftungCE: string;
+  beschriftungRO: string;
+  beschriftungT: string;
+  druckfestigkeit: string; // Formerly beschriftung000
+  beschriftungSchicht: string;
+  beschriftungSchichtzeitraum: string;
+  beschriftungDatum: string;
+
   // Grundeinstellung Vortrieb
   vortriebOben1: string;
   vortriebOben2: string;
@@ -25,6 +36,8 @@ export interface SteinformatData {
   vortriebRechts2: string;
   vortriebRechts3: string;
   vortriebZentrum: string;
+  presskopfLeiste: string;
+  mundstueckFoto: string | null;
   // Presse section
   austrag: string;
   schnittlaengeNass: string;
@@ -54,9 +67,11 @@ export interface SteinformatData {
   geschwLinglBandbruecke: string;
   abziehblechNr: string;
   drahtreiniger: string;
-  schabloneNr: string;
+  schablone: string;
+  schabloneninfo: string;
   abfallAuswerfer: string;
   drahtdurchmesser: string;
   drahtnachzug: string;
   geschwFuerNachfBand: string;
+  parameterFuerDrehteller: string;
 }

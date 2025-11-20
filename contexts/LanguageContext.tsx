@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { translations } from '../translations';
 
-type Language = 'de' | 'en' | 'ru';
+type Language = 'de' | 'en' | 'cs';
 type Translations = typeof translations.de;
 
 interface LanguageContextType {
@@ -12,12 +12,8 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// FIX: Refactored props to a dedicated interface to solve potential tooling/typing issue.
-interface LanguageProviderProps {
-  children: ReactNode;
-}
-
-export const LanguageProvider = ({ children }: LanguageProviderProps) => {
+// FIX: Using an inline type for props to solve a potential tooling/typing issue.
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const storedLang = localStorage.getItem('language') as Language;
     if (storedLang && translations[storedLang]) {

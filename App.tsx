@@ -94,15 +94,21 @@ const App: React.FC = () => {
           const responseSchema = {
               type: Type.OBJECT,
               properties: {
-                  espNr: { type: Type.STRING }, formatBezeichnung: { type: Type.STRING }, beschriftungAufDemStein: { type: Type.STRING },
+                  artNr: { type: Type.STRING }, formatBezeichnung: { type: Type.STRING },
+                  beschriftungSchlagmann: { type: Type.STRING }, beschriftungCE: { type: Type.STRING },
+                  beschriftungRO: { type: Type.STRING }, beschriftungT: { type: Type.STRING },
+                  druckfestigkeit: { type: Type.STRING }, beschriftungSchicht: { type: Type.STRING },
+                  beschriftungSchichtzeitraum: { type: Type.STRING }, beschriftungDatum: { type: Type.STRING },
                   material: { type: Type.STRING }, datum: { type: Type.STRING }, abmessungen: { type: Type.STRING },
                   mundstueckNr: { type: Type.STRING }, presskopf: { type: Type.STRING }, pressprogramm: { type: Type.STRING },
+                  zahnradAbschneider: { type: Type.STRING },
                   sonstigeEinstellungen: { type: Type.STRING },
                   vortriebOben1: { type: Type.STRING }, vortriebOben2: { type: Type.STRING }, vortriebOben3: { type: Type.STRING },
                   vortriebUnten1: { type: Type.STRING }, vortriebUnten2: { type: Type.STRING }, vortriebUnten3: { type: Type.STRING },
                   vortriebLinks1: { type: Type.STRING }, vortriebLinks2: { type: Type.STRING }, vortriebLinks3: { type: Type.STRING },
                   vortriebRechts1: { type: Type.STRING }, vortriebRechts2: { type: Type.STRING }, vortriebRechts3: { type: Type.STRING },
-                  vortriebZentrum: { type: Type.STRING },
+                  vortriebZentrum: { type: Type.STRING }, presskopfLeiste: { type: Type.STRING },
+                  mundstueckFoto: { type: Type.STRING },
                   austrag: { type: Type.STRING }, schnittlaengeNass: { type: Type.STRING }, siebmischer: { type: Type.STRING },
                   wasserSiebmischer: { type: Type.STRING }, dampfSiebmischer: { type: Type.STRING }, gewichtNass: { type: Type.STRING },
                   mischer: { type: Type.STRING }, wasserMischer: { type: Type.STRING }, dampfMischer: { type: Type.STRING },
@@ -112,8 +118,9 @@ const App: React.FC = () => {
                   schnittlaenge: { type: Type.STRING }, vorschub: { type: Type.STRING }, drehvorrichtung: { type: Type.STRING },
                   anzahlSchneidedraehte: { type: Type.STRING }, offsetDrehvorr: { type: Type.STRING }, drahtabstand: { type: Type.STRING },
                   geschwLinglBandbruecke: { type: Type.STRING }, abziehblechNr: { type: Type.STRING }, drahtreiniger: { type: Type.STRING },
-                  schabloneNr: { type: Type.STRING }, abfallAuswerfer: { type: Type.STRING }, drahtdurchmesser: { type: Type.STRING },
+                  schablone: { type: Type.STRING }, schabloneninfo: { type: Type.STRING }, abfallAuswerfer: { type: Type.STRING }, drahtdurchmesser: { type: Type.STRING },
                   drahtnachzug: { type: Type.STRING }, geschwFuerNachfBand: { type: Type.STRING },
+                  parameterFuerDrehteller: { type: Type.STRING },
               }
           };
 
@@ -125,7 +132,7 @@ const App: React.FC = () => {
                           inlineData: { mimeType: 'image/jpeg', data: base64Image }
                       },
                       {
-                          text: `Analysieren Sie dieses Bild eines deutschen technischen Formulars mit dem Titel "Maschinen-Einstellparameter für Steinformate". Extrahieren Sie alle Werte aus den Eingabefeldern und geben Sie sie als JSON-Objekt zurück. Die JSON-Schlüssel müssen mit dem bereitgestellten Schema übereinstimmen. Bei Dropdown-Feldern wie 'Abschneidetisch' versuchen Sie, den Wert einer der Optionen zuzuordnen ('Normal', 'Deckenziegel', 'Juwö'). Bei 'Ein/Aus'-Feldern geben Sie 'Ein' oder 'Aus' zurück. Wenn ein Feld leer ist, geben Sie einen leeren String zurück. Die Ausgabe darf nur ein gültiges JSON-Objekt sein.`
+                          text: `Analysieren Sie dieses Bild eines deutschen technischen Formulars mit dem Titel "Maschinen-Einstellparameter für Steinformate". Extrahieren Sie alle Werte aus den Eingabefeldern und geben Sie sie als JSON-Objekt zurück. Die JSON-Schlüssel müssen mit dem bereitgestellten Schema übereinstimmen. Für die "Beschriftung auf dem Stein"-Felder (Schlagmann, CE, RÖ, T, Schicht, Schichtzeitraum, Datum), entscheiden Sie für jedes, ob die Beschriftung vorhanden ist. Geben Sie 'mit' zurück, wenn sie vorhanden ist, und 'ohne', wenn nicht. Für das Feld 'Druckfestigkeit' extrahieren Sie den numerischen Wert. Bei Dropdown-Feldern wie 'Abschneidetisch', 'Presskopf Leiste', 'vortriebZentrum' (mögliche Werte: 'Mitte', 'Nach Rechts', 'Nach Links'), 'schablone' (mögliche Werte: DZ80, DZ120, etc.) oder 'Parameter für Drehteller' (mögliche Werte: '[3 Drehteller]...' oder '[6 Drehteller]...'), versuchen Sie, den Wert einer der Optionen zuzuordnen. Bei 'Ein/Aus'-Feldern geben Sie 'Ein' oder 'Aus' zurück. Wenn ein Feld leer ist, geben Sie einen leeren String zurück. Das Feld 'mundstueckFoto' ignorieren. Die Ausgabe darf nur ein gültiges JSON-Objekt sein.`
                       }
                   ]
               },
@@ -135,8 +142,13 @@ const App: React.FC = () => {
               }
           });
 
-          const extractedData = JSON.parse(response.text.trim());
-          setScannedInitialData({ ...extractedData, id: '', hilfsmittelFotos: [] });
+          // FIX: The `response.text` property can be undefined. Added a check to prevent runtime errors.
+          const text = response.text;
+          if (!text) {
+            throw new Error("API response did not contain text.");
+          }
+          const extractedData = JSON.parse(text.trim());
+          setScannedInitialData({ ...extractedData, id: '', hilfsmittelFotos: [], mundstueckFoto: null });
           setIsReadOnly(false);
           setView('form');
 
@@ -225,8 +237,10 @@ const App: React.FC = () => {
   }, [forms, selectedFormId]);
 
   const filteredForms = useMemo(() => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return forms.filter(form =>
-      form.formatBezeichnung.toLowerCase().includes(searchTerm.toLowerCase())
+      form.formatBezeichnung.toLowerCase().includes(lowerCaseSearchTerm) ||
+      form.artNr.toLowerCase().includes(lowerCaseSearchTerm)
     );
   }, [forms, searchTerm]);
 
@@ -248,12 +262,12 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-700">{t('appTitle')}</h1>
             <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as 'de' | 'en' | 'ru')}
+                onChange={(e) => setLanguage(e.target.value as 'de' | 'en' | 'cs')}
                 className="bg-white border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="de">Deutsch</option>
                 <option value="en">English</option>
-                <option value="ru">Русский</option>
+                <option value="cs">Čeština</option>
               </select>
           </div>
           {view === 'list' && (

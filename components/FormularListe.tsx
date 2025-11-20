@@ -48,7 +48,7 @@ const FormularListe: React.FC<FormularListeProps> = ({ forms, onSelect, onView, 
                             <div className="flex-grow mb-2 sm:mb-0" onClick={() => onSelect(form.id)}>
                                 <p className="font-semibold text-blue-600">{form.formatBezeichnung}</p>
                                 <p className="text-sm text-gray-500">
-                                    <span className="font-medium">{t('espNrLabel')}: {form.espNr || 'N/A'}</span> | {t('beschriftungLabel')}: {form.beschriftungAufDemStein || 'N/A'} | {t('materialLabel')}: {form.material || 'N/A'} | {t('datumLabel')}: {form.datum || 'N/A'}
+                                    <span className="font-medium">{t('artNrLabel')}: {form.artNr || 'N/A'}</span> | {t('materialLabel')}: {form.material || 'N/A'} | {t('datumLabel')}: {form.datum || 'N/A'}
                                 </p>
                             </div>
                             <div className="flex items-center space-x-2 flex-shrink-0">
