@@ -102,18 +102,24 @@ const App: React.FC = () => {
                   material: { type: Type.STRING }, datum: { type: Type.STRING }, abmessungen: { type: Type.STRING },
                   mundstueckNr: { type: Type.STRING }, presskopf: { type: Type.STRING }, pressprogramm: { type: Type.STRING },
                   zahnradAbschneider: { type: Type.STRING },
-                  sonstigeEinstellungen: { type: Type.STRING },
                   vortriebOben1: { type: Type.STRING }, vortriebOben2: { type: Type.STRING }, vortriebOben3: { type: Type.STRING },
                   vortriebUnten1: { type: Type.STRING }, vortriebUnten2: { type: Type.STRING }, vortriebUnten3: { type: Type.STRING },
                   vortriebLinks1: { type: Type.STRING }, vortriebLinks2: { type: Type.STRING }, vortriebLinks3: { type: Type.STRING },
                   vortriebRechts1: { type: Type.STRING }, vortriebRechts2: { type: Type.STRING }, vortriebRechts3: { type: Type.STRING },
                   vortriebZentrum: { type: Type.STRING }, presskopfLeiste: { type: Type.STRING },
-                  mundstueckFoto: { type: Type.STRING },
+                  sonstigeEinstellungen: { type: Type.STRING },
                   austrag: { type: Type.STRING }, schnittlaengeNass: { type: Type.STRING }, siebmischer: { type: Type.STRING },
                   wasserSiebmischer: { type: Type.STRING }, dampfSiebmischer: { type: Type.STRING }, gewichtNass: { type: Type.STRING },
                   mischer: { type: Type.STRING }, wasserMischer: { type: Type.STRING }, dampfMischer: { type: Type.STRING },
-                  pressendruck: { type: Type.STRING }, presse: { type: Type.STRING }, tonreiniger: { type: Type.STRING },
-                  schnecke: { type: Type.STRING }, rostkorb: { type: Type.STRING }, styropor: { type: Type.STRING },
+                  pressendruck: { type: Type.STRING }, presse: { type: Type.STRING }, styropor: { type: Type.STRING },
+                  // Tonreiniger Parameter
+                  trSchneckeDrehzahl: { type: Type.STRING }, trRostkorbDrehzahl: { type: Type.STRING },
+                  trSchneckeDrehzahlMax: { type: Type.STRING }, trRostkorbDrehzahlMax: { type: Type.STRING },
+                  trSchneckeDrehzahlMin: { type: Type.STRING }, trRostkorbDrehzahlMin: { type: Type.STRING },
+                  trSchneckeStromMaxWarn: { type: Type.STRING }, trRostkorbStromMaxWarn: { type: Type.STRING },
+                  trSchneckeStromMinWarn: { type: Type.STRING }, trRostkorbStromMinWarn: { type: Type.STRING },
+                  trSchneckeStromMaxStoerung: { type: Type.STRING }, trRostkorbStromMaxStoerung: { type: Type.STRING },
+                  // Abschneider
                   abschneidetisch: { type: Type.STRING }, freimatikProduktname: { type: Type.STRING }, hubhoehe: { type: Type.STRING },
                   schnittlaenge: { type: Type.STRING }, vorschub: { type: Type.STRING }, drehvorrichtung: { type: Type.STRING },
                   anzahlSchneidedraehte: { type: Type.STRING }, offsetDrehvorr: { type: Type.STRING }, drahtabstand: { type: Type.STRING },
@@ -132,7 +138,7 @@ const App: React.FC = () => {
                           inlineData: { mimeType: 'image/jpeg', data: base64Image }
                       },
                       {
-                          text: `Analysieren Sie dieses Bild eines deutschen technischen Formulars mit dem Titel "Maschinen-Einstellparameter für Steinformate". Extrahieren Sie alle Werte aus den Eingabefeldern und geben Sie sie als JSON-Objekt zurück. Die JSON-Schlüssel müssen mit dem bereitgestellten Schema übereinstimmen. Für die "Beschriftung auf dem Stein"-Felder (Schlagmann, CE, RÖ, T, Schicht, Schichtzeitraum, Datum), entscheiden Sie für jedes, ob die Beschriftung vorhanden ist. Geben Sie 'mit' zurück, wenn sie vorhanden ist, und 'ohne', wenn nicht. Für das Feld 'Druckfestigkeit' extrahieren Sie den numerischen Wert. Bei Dropdown-Feldern wie 'Abschneidetisch', 'Presskopf Leiste', 'vortriebZentrum' (mögliche Werte: 'Mitte', 'Nach Rechts', 'Nach Links'), 'schablone' (mögliche Werte: DZ80, DZ120, etc.) oder 'Parameter für Drehteller' (mögliche Werte: '[3 Drehteller]...' oder '[6 Drehteller]...'), versuchen Sie, den Wert einer der Optionen zuzuordnen. Bei 'Ein/Aus'-Feldern geben Sie 'Ein' oder 'Aus' zurück. Wenn ein Feld leer ist, geben Sie einen leeren String zurück. Das Feld 'mundstueckFoto' ignorieren. Die Ausgabe darf nur ein gültiges JSON-Objekt sein.`
+                          text: `Analysieren Sie dieses Bild eines deutschen technischen Formulars mit dem Titel "Maschinen-Einstellparameter für Steinformate". Extrahieren Sie alle Werte aus den Eingabefeldern und geben Sie sie als JSON-Objekt zurück. Die JSON-Schlüssel müssen mit dem bereitgestellten Schema übereinstimmen. Für die "Beschriftung auf dem Stein"-Felder (Schlagmann, CE, RÖ, T, Schicht, Schichtzeitraum, Datum), entscheiden Sie für jedes, ob die Beschriftung vorhanden ist. Geben Sie 'ja' zurück, wenn sie vorhanden ist, und 'nein', wenn nicht. Für das Feld 'Druckfestigkeit' extrahieren Sie den numerischen Wert. Bei Dropdown-Feldern wie 'Abschneidetisch', 'schablone' (mögliche Werte: DZ80, DZ120, etc.) oder 'Parameter für Drehteller' (mögliche Werte: '[3 Drehteller]...' oder '[6 Drehteller]...'), versuchen Sie, den Wert einer der Optionen zuzuordnen. Bei 'Ein/Aus'-Feldern geben Sie 'Ein' oder 'Aus' zurück. Wenn ein Feld leer ist, geben Sie einen leeren String zurück. Die Ausgabe darf nur ein gültiges JSON-Objekt sein.`
                       }
                   ]
               },
@@ -256,7 +262,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      <header className="bg-white shadow-md sticky top-0 z-10">
+      <header className="bg-white shadow-md sticky top-0 z-10 no-print">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-700">{t('appTitle')}</h1>
@@ -340,7 +346,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-8 mt-4 bg-gray-50 border-t border-gray-200">
+      <footer className="py-8 mt-4 bg-gray-50 border-t border-gray-200 no-print">
           <div className="flex justify-center items-center px-4">
               <img 
                   src={logoSvg} 

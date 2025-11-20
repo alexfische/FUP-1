@@ -24,6 +24,26 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #555;
       }
+
+      /* Print-specific styles */
+      @media print {
+        body {
+          background-color: white;
+        }
+        .no-print {
+          display: none !important;
+        }
+        main.container {
+          padding: 0;
+          margin: 0;
+          max-width: 100%;
+        }
+        form {
+          box-shadow: none !important;
+          border: none !important;
+          padding: 0 !important;
+        }
+      }
     </style>
   <script type="importmap">
 {

@@ -38,6 +38,7 @@ export interface SteinformatData {
   vortriebZentrum: string;
   presskopfLeiste: string;
   mundstueckFoto: string | null;
+
   // Presse section
   austrag: string;
   schnittlaengeNass: string;
@@ -50,10 +51,22 @@ export interface SteinformatData {
   dampfMischer: string;
   pressendruck: string;
   presse: string;
-  tonreiniger: string;
-  schnecke: string;
-  rostkorb: string;
   styropor: string;
+
+  // Tonreiniger Parameter
+  trSchneckeDrehzahl: string;
+  trRostkorbDrehzahl: string;
+  trSchneckeDrehzahlMax: string;
+  trRostkorbDrehzahlMax: string;
+  trSchneckeDrehzahlMin: string;
+  trRostkorbDrehzahlMin: string;
+  trSchneckeStromMaxWarn: string;
+  trRostkorbStromMaxWarn: string;
+  trSchneckeStromMinWarn: string;
+  trRostkorbStromMinWarn: string;
+  trSchneckeStromMaxStoerung: string;
+  trRostkorbStromMaxStoerung: string;
+
   // Abschneider section
   abschneidetisch: string;
   freimatikProduktname: string;

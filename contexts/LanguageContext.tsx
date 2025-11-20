@@ -12,8 +12,12 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// FIX: Using an inline type for props to solve a potential tooling/typing issue.
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+// FIX: Updated `LanguageProvider` to be explicitly typed as a `React.FC` (Functional Component). This resolves a TypeScript error in `index.tsx` where the `children` prop was not being correctly inferred for the provider component.
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const storedLang = localStorage.getItem('language') as Language;
     if (storedLang && translations[storedLang]) {

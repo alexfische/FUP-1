@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SteinformatData } from '../types';
-import { SaveIcon, CancelIcon, CameraIcon, XMarkIcon } from './Icons';
+import { SaveIcon, CancelIcon, CameraIcon, XMarkIcon, PrintIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface FormularProps {
@@ -13,23 +13,30 @@ interface FormularProps {
 const createEmptyForm = (): Omit<SteinformatData, 'id'> => ({
     artNr: '', formatBezeichnung: '', material: '', datum: new Date().toISOString().split('T')[0], abmessungen: '',
     // Beschriftung
-    beschriftungSchlagmann: '', beschriftungCE: '', beschriftungRO: '', beschriftungT: '',
-    druckfestigkeit: '', beschriftungSchicht: '', beschriftungSchichtzeitraum: '', beschriftungDatum: '',
-    // Rest
-    mundstueckNr: '', presskopf: '', sonstigeEinstellungen: '', pressprogramm: '', zahnradAbschneider: '', hilfsmittelFotos: [],
-    // Vortrieb
+    beschriftungSchlagmann: 'nein', beschriftungCE: 'nein', beschriftungRO: 'nein', beschriftungT: 'nein',
+    druckfestigkeit: '', beschriftungSchicht: 'nein', beschriftungSchichtzeitraum: 'nein', beschriftungDatum: 'nein',
+    // Grundeinstellung Vortrieb
     vortriebOben1: '', vortriebOben2: '', vortriebOben3: '',
     vortriebUnten1: '', vortriebUnten2: '', vortriebUnten3: '',
     vortriebLinks1: '', vortriebLinks2: '', vortriebLinks3: '',
     vortriebRechts1: '', vortriebRechts2: '', vortriebRechts3: '',
     vortriebZentrum: 'Mitte', presskopfLeiste: 'unten', mundstueckFoto: null,
+    // Rest
+    mundstueckNr: '', presskopf: '', sonstigeEinstellungen: '', pressprogramm: '', zahnradAbschneider: '', hilfsmittelFotos: [],
     // Presse
     austrag: '', schnittlaengeNass: '',
     siebmischer: '', wasserSiebmischer: '', dampfSiebmischer: '',
     gewichtNass: '',
     mischer: '', wasserMischer: '', dampfMischer: '',
     pressendruck: '',
-    presse: '', tonreiniger: '', schnecke: '', rostkorb: '', styropor: '',
+    presse: '', styropor: '',
+    // Tonreiniger
+    trSchneckeDrehzahl: '', trRostkorbDrehzahl: '',
+    trSchneckeDrehzahlMax: '', trRostkorbDrehzahlMax: '',
+    trSchneckeDrehzahlMin: '', trRostkorbDrehzahlMin: '',
+    trSchneckeStromMaxWarn: '', trRostkorbStromMaxWarn: '',
+    trSchneckeStromMinWarn: '', trRostkorbStromMinWarn: '',
+    trSchneckeStromMaxStoerung: '', trRostkorbStromMaxStoerung: '',
     // Abschneider
     abschneidetisch: 'Normal', freimatikProduktname: '', hubhoehe: '', schnittlaenge: '',
     vorschub: '', drehvorrichtung: 'Aus', anzahlSchneidedraehte: '', offsetDrehvorr: '', drahtabstand: '',
@@ -81,20 +88,37 @@ const BooleanSelect = ({ label, name, defaultValue, readOnly, t }: { label: stri
     </div>
 );
 
-const BeschriftungSelect = ({ label, name, defaultValue, readOnly, t }: { label: string, name: string, defaultValue: any, readOnly: boolean, t: (key: any) => string }) => (
+const BeschriftungRadio = ({ label, name, defaultValue, readOnly, t }: { label: string, name: string, defaultValue: any, readOnly: boolean, t: (key: any) => string }) => (
     <div className="flex flex-col">
-        <label htmlFor={name} className="mb-1 text-xs font-medium text-gray-700">{label}</label>
-        <select
-            id={name}
-            name={name}
-            defaultValue={defaultValue}
-            disabled={readOnly}
-            className={`bg-white text-black border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 ${readOnly ? 'cursor-not-allowed' : ''}`}
-        >
-            <option value="">{t('bitteWaehlen')}</option>
-            <option value="mit">{t('mitOption')}</option>
-            <option value="ohne">{t('ohneOption')}</option>
-        </select>
+        <label className="mb-2 text-xs font-medium text-gray-700">{label}</label>
+        <div className="flex items-center gap-4 h-[30px]">
+            <div className="flex items-center">
+                <input type="radio" id={`${name}-ja`} name={name} value="ja" defaultChecked={defaultValue === 'ja'} disabled={readOnly} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                <label htmlFor={`${name}-ja`} className="ml-2 text-sm text-gray-700">{t('ja')}</label>
+            </div>
+            <div className="flex items-center">
+                <input type="radio" id={`${name}-nein`} name={name} value="nein" defaultChecked={defaultValue === 'nein'} disabled={readOnly} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                <label htmlFor={`${name}-nein`} className="ml-2 text-sm text-gray-700">{t('nein')}</label>
+            </div>
+        </div>
+    </div>
+);
+
+
+const TonreinigerField = ({ label, name, unit, defaultValue, readOnly }: { label: string, name: string, unit: string, defaultValue: any, readOnly: boolean }) => (
+    <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="flex items-center gap-2">
+            <input
+                type="text"
+                name={name}
+                defaultValue={defaultValue}
+                readOnly={readOnly}
+                disabled={readOnly}
+                className={`w-full bg-white text-black text-right border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 ${readOnly ? 'cursor-not-allowed' : ''}`}
+            />
+            <span className="text-sm text-gray-500 font-medium w-10">{unit}</span>
+        </div>
     </div>
 );
 
@@ -112,7 +136,22 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
 
   useEffect(() => {
     const empty = createEmptyForm();
-    const data = initialData ? { ...empty, ...initialData } : empty;
+    let data: any = initialData ? { ...empty, ...initialData } : empty;
+
+    // Migration logic for old "mit/ohne" values to "ja/nein"
+    const fieldsToMigrate: (keyof SteinformatData)[] = [
+        'beschriftungSchlagmann', 'beschriftungCE', 'beschriftungRO', 'beschriftungT',
+        'beschriftungSchicht', 'beschriftungSchichtzeitraum', 'beschriftungDatum'
+    ];
+
+    fieldsToMigrate.forEach(key => {
+        if (data[key] === 'mit') {
+            data[key] = 'ja';
+        } else if (data[key] === 'ohne') {
+            data[key] = 'nein';
+        }
+    });
+
     setDefaultValues(data);
     setImages(data.hilfsmittelFotos || []);
     setMundstueckFoto(data.mundstueckFoto || null);
@@ -236,121 +275,107 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
       {/* Main Layout: Vortrieb, Sonstige, Presse */}
       <div className="space-y-8">
         
-        {/* Grundeinstellung Vortrieb - Flexbox Layout */}
+        {/* Grundeinstellung Vortrieb with Styled Background */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
             <legend className="text-lg font-semibold text-gray-700 px-2">{t('grundeinstellungVortrieb')}</legend>
-            <div className="flex flex-col items-center gap-4">
-                 <div className="flex flex-col items-center gap-4 bg-gray-100 p-6 rounded-lg border border-gray-200">
-                    <h3 className="text-md font-semibold text-gray-600 text-center">{t('bremsschieber')}</h3>
-                    {/* Top Row - Horizontal */}
-                    <div className="flex gap-4">
-                        <VortriebInput name="vortriebOben1" defaultValue={defaultValues.vortriebOben1} readOnly={readOnly} />
-                        <VortriebInput name="vortriebOben2" defaultValue={defaultValues.vortriebOben2} readOnly={readOnly} />
-                        <VortriebInput name="vortriebOben3" defaultValue={defaultValues.vortriebOben3} readOnly={readOnly} />
-                    </div>
+            <div className="flex flex-col items-center">
+                <div 
+                    className="relative w-full max-w-2xl mx-auto bg-gray-300 shadow-inner" 
+                    style={{ 
+                        aspectRatio: '1.25',
+                        clipPath: 'polygon(20% 0%, 80% 0%, 80% 15%, 100% 15%, 100% 85%, 80% 85%, 80% 100%, 20% 100%, 20% 85%, 0% 85%, 0% 15%, 20% 15%)'
+                    }}
+                >
+                    
+                    {/* Top Row Inputs */}
+                    <div className="absolute" style={{ top: '23.5%', left: '35.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebOben1" defaultValue={defaultValues.vortriebOben1} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '23.5%', left: '46.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebOben2" defaultValue={defaultValues.vortriebOben2} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '23.5%', left: '57.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebOben3" defaultValue={defaultValues.vortriebOben3} readOnly={readOnly} className="w-full h-full" /> </div>
+                    
+                    {/* Bottom Row Inputs */}
+                    <div className="absolute" style={{ top: '69.5%', left: '35.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebUnten1" defaultValue={defaultValues.vortriebUnten1} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '69.5%', left: '46.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebUnten2" defaultValue={defaultValues.vortriebUnten2} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '69.5%', left: '57.5%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebUnten3" defaultValue={defaultValues.vortriebUnten3} readOnly={readOnly} className="w-full h-full" /> </div>
 
-                    <div className="flex gap-4 items-center">
-                        {/* Left Column - Vertical */}
-                        <div className="flex flex-col gap-4">
-                            <VortriebInput name="vortriebLinks1" defaultValue={defaultValues.vortriebLinks1} readOnly={readOnly} />
-                            <VortriebInput name="vortriebLinks2" defaultValue={defaultValues.vortriebLinks2} readOnly={readOnly} />
-                            <VortriebInput name="vortriebLinks3" defaultValue={defaultValues.vortriebLinks3} readOnly={readOnly} />
-                        </div>
-                        
-                        {/* Center Column with Label */}
-                        <div className="flex flex-col items-center">
-                            <label className="mb-1 text-sm font-medium text-gray-700">{t('mundstueckstellung')}</label>
-                            <select
-                                name="vortriebZentrum"
-                                defaultValue={defaultValues.vortriebZentrum}
-                                disabled={readOnly}
-                                className="w-28 h-10 bg-white text-black text-center border-blue-500 border-2 font-semibold text-base rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                            >
-                                <option value="Mitte">{t('mitte')}</option>
-                                <option value="Nach Rechts">{t('nachRechts')}</option>
-                                <option value="Nach Links">{t('nachLinks')}</option>
-                            </select>
-                        </div>
+                    {/* Left Column Inputs */}
+                    <div className="absolute" style={{ top: '35.5%', left: '16%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebLinks1" defaultValue={defaultValues.vortriebLinks1} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '46.5%', left: '16%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebLinks2" defaultValue={defaultValues.vortriebLinks2} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '57.5%', left: '16%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebLinks3" defaultValue={defaultValues.vortriebLinks3} readOnly={readOnly} className="w-full h-full" /> </div>
 
-                        {/* Right Column - Vertical */}
-                        <div className="flex flex-col gap-4">
-                            <VortriebInput name="vortriebRechts1" defaultValue={defaultValues.vortriebRechts1} readOnly={readOnly} />
-                            <VortriebInput name="vortriebRechts2" defaultValue={defaultValues.vortriebRechts2} readOnly={readOnly} />
-                            <VortriebInput name="vortriebRechts3" defaultValue={defaultValues.vortriebRechts3} readOnly={readOnly} />
-                        </div>
-                    </div>
+                    {/* Right Column Inputs */}
+                    <div className="absolute" style={{ top: '35.5%', left: '77%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebRechts1" defaultValue={defaultValues.vortriebRechts1} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '46.5%', left: '77%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebRechts2" defaultValue={defaultValues.vortriebRechts2} readOnly={readOnly} className="w-full h-full" /> </div>
+                    <div className="absolute" style={{ top: '57.5%', left: '77%', width: '6.5%', height: '7%' }}> <VortriebInput name="vortriebRechts3" defaultValue={defaultValues.vortriebRechts3} readOnly={readOnly} className="w-full h-full" /> </div>
+                </div>
 
-                    {/* Bottom Row - Horizontal */}
-                    <div className="flex gap-4">
-                        <VortriebInput name="vortriebUnten1" defaultValue={defaultValues.vortriebUnten1} readOnly={readOnly} />
-                        <VortriebInput name="vortriebUnten2" defaultValue={defaultValues.vortriebUnten2} readOnly={readOnly} />
-                        <VortriebInput name="vortriebUnten3" defaultValue={defaultValues.vortriebUnten3} readOnly={readOnly} />
-                    </div>
-                 </div>
-                 <div className="flex flex-col pt-4 items-center w-full">
+                {/* Moved Central Controls */}
+                <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-6 items-start w-full max-w-4xl mx-auto">
                     <div className="flex flex-col items-center">
-                        <label className="mb-1 text-sm font-medium text-gray-700">{t('presskopfLeiste')}</label>
+                        <label className="mb-2 text-sm font-medium text-gray-700">{t('mundstueckstellung')}</label>
+                        <select
+                            name="vortriebZentrum"
+                            defaultValue={defaultValues.vortriebZentrum}
+                            disabled={readOnly}
+                            className="w-40 bg-white text-black text-center border-gray-300 border font-semibold text-base rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 px-3 py-2"
+                        >
+                            <option value="Mitte">{t('mitte')}</option>
+                            <option value="Nach Rechts">{t('nachRechts')}</option>
+                            <option value="Nach Links">{t('nachLinks')}</option>
+                        </select>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <label className="mb-2 text-sm font-medium text-gray-700">{t('presskopfLeiste')}</label>
                         <select
                             name="presskopfLeiste"
                             defaultValue={defaultValues.presskopfLeiste}
                             disabled={readOnly}
-                            className={`w-32 bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                            className={`w-40 bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
                         >
                             <option value="unten">{t('unten')}</option>
                             <option value="oben">{t('oben')}</option>
                         </select>
                     </div>
-
-                    <div className="w-full border-t border-gray-200 mt-6 pt-4">
-                      <div className="flex justify-center">
-                          {mundstueckFoto ? (
-                              <div className="relative group w-48 h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                                  <img 
-                                      src={mundstueckFoto} 
-                                      alt={t('mundstueckFotoAlt')}
-                                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-150 group-hover:z-50 group-hover:shadow-xl origin-center relative z-10"
-                                  />
-                                  <div className="absolute inset-0 z-20 flex items-end justify-center pb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                                       <button
-                                          type="button"
-                                          onClick={() => handleOpenImage(mundstueckFoto)}
-                                          className="bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded pointer-events-auto"
-                                       >
-                                          {t('oeffnen')}
-                                       </button>
-                                  </div>
-                                  {!readOnly && (
-                                      <button
-                                          type="button"
-                                          onClick={removeMundstueckFoto}
-                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 focus:outline-none z-50"
-                                      >
-                                          <XMarkIcon />
-                                      </button>
-                                  )}
-                              </div>
-                          ) : !readOnly ? (
-                              <button
-                                  type="button"
-                                  onClick={() => mundstueckFileInputRef.current?.click()}
-                                  className="flex flex-col items-center justify-center w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
-                              >
-                                  <CameraIcon />
-                                  <span className="text-xs mt-1 text-center px-1">{t('fotoDesMundstuecksHinzufuegen')}</span>
-                              </button>
-                          ) : (
-                               <div className="flex items-center justify-center w-48 h-32 text-gray-400 text-sm">
-                                  {/* Placeholder for read-only empty state, can be styled or have text */}
-                               </div>
-                          )}
-                          <input
-                              type="file"
-                              ref={mundstueckFileInputRef}
-                              onChange={handleMundstueckFotoUpload}
-                              accept="image/*"
-                              className="hidden"
-                          />
-                      </div>
+                    <div className="flex flex-col items-center">
+                        <label className="mb-2 text-sm font-medium text-gray-700">{t('mundstueckFotoAlt')}</label>
+                        {mundstueckFoto ? (
+                            <div className="relative group w-40 h-28 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                <img 
+                                    src={mundstueckFoto} 
+                                    alt={t('mundstueckFotoAlt')}
+                                    className="w-full h-full object-cover"
+                                />
+                                 <div className="absolute inset-0 z-20 flex items-end justify-center pb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                     <button type="button" onClick={() => handleOpenImage(mundstueckFoto)} className="bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded pointer-events-auto">
+                                        {t('oeffnen')}
+                                     </button>
+                                 </div>
+                                {!readOnly && (
+                                    <button
+                                        type="button"
+                                        onClick={removeMundstueckFoto}
+                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 focus:outline-none z-50"
+                                    >
+                                        <XMarkIcon />
+                                    </button>
+                                )}
+                            </div>
+                        ) : !readOnly ? (
+                            <button
+                                type="button"
+                                onClick={() => mundstueckFileInputRef.current?.click()}
+                                className="flex flex-col items-center justify-center w-40 h-28 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+                            >
+                                <CameraIcon />
+                                <span className="text-xs mt-1 text-center px-1">{t('fotoDesMundstuecksHinzufuegen')}</span>
+                            </button>
+                        ): <div className="w-40 h-28 bg-gray-50 rounded-lg"></div>}
+                        <input
+                            type="file"
+                            ref={mundstueckFileInputRef}
+                            onChange={handleMundstueckFotoUpload}
+                            accept="image/*"
+                            className="hidden"
+                        />
                     </div>
                 </div>
             </div>
@@ -360,14 +385,26 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
         <fieldset className="border border-gray-200 rounded-lg p-4">
             <legend className="text-lg font-semibold text-gray-700 px-2">{t('beschriftungAufDemStein')}</legend>
             <div className="flex flex-row flex-wrap items-end gap-x-6 gap-y-4 pt-2">
-                <BeschriftungSelect label={t('schlagmannLabel')} name="beschriftungSchlagmann" defaultValue={defaultValues.beschriftungSchlagmann} readOnly={readOnly} t={t} />
-                <BeschriftungSelect label={t('ceLabel')} name="beschriftungCE" defaultValue={defaultValues.beschriftungCE} readOnly={readOnly} t={t} />
-                <BeschriftungSelect label={t('roLabel')} name="beschriftungRO" defaultValue={defaultValues.beschriftungRO} readOnly={readOnly} t={t} />
-                <BeschriftungSelect label={t('tLabel')} name="beschriftungT" defaultValue={defaultValues.beschriftungT} readOnly={readOnly} t={t} />
-                <InputField label={t('druckfestigkeitLabel')} name="druckfestigkeit" defaultValue={defaultValues.druckfestigkeit} readOnly={readOnly} type="number" step="0.01" small />
-                <BeschriftungSelect label={t('schichtLabel')} name="beschriftungSchicht" defaultValue={defaultValues.beschriftungSchicht} readOnly={readOnly} t={t} />
-                <BeschriftungSelect label={t('schichtzeitraumLabel')} name="beschriftungSchichtzeitraum" defaultValue={defaultValues.beschriftungSchichtzeitraum} readOnly={readOnly} t={t} />
-                <BeschriftungSelect label={t('datumBeschriftungLabel')} name="beschriftungDatum" defaultValue={defaultValues.beschriftungDatum} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('schlagmannLabel')} name="beschriftungSchlagmann" defaultValue={defaultValues.beschriftungSchlagmann} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('ceLabel')} name="beschriftungCE" defaultValue={defaultValues.beschriftungCE} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('roLabel')} name="beschriftungRO" defaultValue={defaultValues.beschriftungRO} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('tLabel')} name="beschriftungT" defaultValue={defaultValues.beschriftungT} readOnly={readOnly} t={t} />
+                <div className="flex flex-col">
+                    <label htmlFor="druckfestigkeit" className="mb-1 text-xs font-medium text-gray-700">{t('druckfestigkeitLabel')}</label>
+                    <input
+                        type="number"
+                        id="druckfestigkeit"
+                        name="druckfestigkeit"
+                        step="0.01"
+                        defaultValue={defaultValues.druckfestigkeit}
+                        readOnly={readOnly}
+                        disabled={readOnly}
+                        className="w-24 bg-white text-black border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    />
+                </div>
+                <BeschriftungRadio label={t('schichtLabel')} name="beschriftungSchicht" defaultValue={defaultValues.beschriftungSchicht} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('schichtzeitraumLabel')} name="beschriftungSchichtzeitraum" defaultValue={defaultValues.beschriftungSchichtzeitraum} readOnly={readOnly} t={t} />
+                <BeschriftungRadio label={t('datumBeschriftungLabel')} name="beschriftungDatum" defaultValue={defaultValues.beschriftungDatum} readOnly={readOnly} t={t} />
             </div>
         </fieldset>
 
@@ -440,49 +477,67 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
         <fieldset className="border border-gray-200 rounded-lg p-4">
             <legend className="text-lg font-semibold text-gray-700 px-2">{t('presse')}</legend>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Reordered fields */}
                 <InputField label={t('austrag')} name="austrag" defaultValue={defaultValues.austrag} readOnly={readOnly} />
-                <InputField label={t('schnittlaengeNass')} name="schnittlaengeNass" defaultValue={defaultValues.schnittlaengeNass} readOnly={readOnly} />
                 
                 {!hideSiebmischerGroup ? (
-                    <>
-                        <InputField label={t('siebmischer')} name="siebmischer" defaultValue={defaultValues.siebmischer} readOnly={readOnly} />
-                        <InputField label={t('wasserSiebmischer')} name="wasserSiebmischer" defaultValue={defaultValues.wasserSiebmischer} readOnly={readOnly} />
-                        <InputField label={t('dampfSiebmischer')} name="dampfSiebmischer" defaultValue={defaultValues.dampfSiebmischer} readOnly={readOnly} />
-                    </>
-                ) : (
-                    <>
-                        <div className="hidden md:block"></div>
-                        <div className="hidden md:block"></div>
-                        <div className="hidden md:block"></div>
-                    </>
-                )}
-
-                <InputField label={t('gewichtNass')} name="gewichtNass" defaultValue={defaultValues.gewichtNass} readOnly={readOnly} />
+                    <InputField label={t('siebmischer')} name="siebmischer" defaultValue={defaultValues.siebmischer} readOnly={readOnly} />
+                ) : <div className="hidden md:block"></div>}
                 
                 <InputField label={t('mischer')} name="mischer" defaultValue={defaultValues.mischer} readOnly={readOnly} />
-                <InputField label={t('wasserMischer')} name="wasserMischer" defaultValue={defaultValues.wasserMischer} readOnly={readOnly} />
-                <InputField label={t('dampfMischer')} name="dampfMischer" defaultValue={defaultValues.dampfMischer} readOnly={readOnly} />
-
-                <InputField label={t('pressendruck')} name="pressendruck" defaultValue={defaultValues.pressendruck} readOnly={readOnly} />
                 <InputField label={t('presseField')} name="presse" defaultValue={defaultValues.presse} readOnly={readOnly} />
-                
-                {!hideTonreinigerGroup ? (
-                    <>
-                         <InputField label={t('tonreiniger')} name="tonreiniger" defaultValue={defaultValues.tonreiniger} readOnly={readOnly} />
-                         <InputField label={t('schnecke')} name="schnecke" defaultValue={defaultValues.schnecke} readOnly={readOnly} />
-                         <InputField label={t('rostkorb')} name="rostkorb" defaultValue={defaultValues.rostkorb} readOnly={readOnly} />
-                    </>
-                ) : (
-                     <>
-                         <div className="hidden md:block"></div>
-                         <div className="hidden md:block"></div>
-                         <div className="hidden md:block"></div>
-                     </>
-                )}
 
                 <InputField label={t('styropor')} name="styropor" defaultValue={defaultValues.styropor} readOnly={readOnly} />
+                <InputField label={t('pressendruck')} name="pressendruck" defaultValue={defaultValues.pressendruck} readOnly={readOnly} />
+                <InputField label={t('schnittlaengeNass')} name="schnittlaengeNass" defaultValue={defaultValues.schnittlaengeNass} readOnly={readOnly} />
+                <InputField label={t('gewichtNass')} name="gewichtNass" defaultValue={defaultValues.gewichtNass} readOnly={readOnly} />
+
+                <InputField label={t('dampfMischer')} name="dampfMischer" defaultValue={defaultValues.dampfMischer} readOnly={readOnly} />
+
+                {!hideSiebmischerGroup ? (
+                    <InputField label={t('dampfSiebmischer')} name="dampfSiebmischer" defaultValue={defaultValues.dampfSiebmischer} readOnly={readOnly} />
+                ) : <div className="hidden md:block"></div>}
+
+                <InputField label={t('wasserMischer')} name="wasserMischer" defaultValue={defaultValues.wasserMischer} readOnly={readOnly} />
+
+                {!hideSiebmischerGroup ? (
+                    <InputField label={t('wasserSiebmischer')} name="wasserSiebmischer" defaultValue={defaultValues.wasserSiebmischer} readOnly={readOnly} />
+                ) : <div className="hidden md:block"></div>}
             </div>
         </fieldset>
+
+        {/* Tonreiniger Parameter Section - RESTRUCTURED */}
+        {!hideTonreinigerGroup && (
+        <fieldset className="border border-gray-200 rounded-lg p-4">
+             <legend className="text-lg font-semibold text-gray-700 px-2">{t('tonreinigerParameter')}</legend>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                {/* Subsection 1: Schneckenantrieb */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 className="font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4 text-center">{t('schneckenantrieb')}</h3>
+                    
+                    <TonreinigerField label={t('drehzahl')} name="trSchneckeDrehzahl" defaultValue={defaultValues.trSchneckeDrehzahl} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('drehzahlUeberwMax')} name="trSchneckeDrehzahlMax" defaultValue={defaultValues.trSchneckeDrehzahlMax} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('drehzahlUeberwMin')} name="trSchneckeDrehzahlMin" defaultValue={defaultValues.trSchneckeDrehzahlMin} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('stromgrenzeMaxWarnung')} name="trSchneckeStromMaxWarn" defaultValue={defaultValues.trSchneckeStromMaxWarn} readOnly={readOnly} unit="% IN" />
+                    <TonreinigerField label={t('stromgrenzeMinWarnung')} name="trSchneckeStromMinWarn" defaultValue={defaultValues.trSchneckeStromMinWarn} readOnly={readOnly} unit="% IN" />
+                    <TonreinigerField label={t('stromgrenzeMaxStoerung')} name="trSchneckeStromMaxStoerung" defaultValue={defaultValues.trSchneckeStromMaxStoerung} readOnly={readOnly} unit="% IN" />
+                </div>
+
+                {/* Subsection 2: Rostkorbantrieb */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 className="font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4 text-center">{t('rostkorbantrieb')}</h3>
+                    
+                    <TonreinigerField label={t('drehzahl')} name="trRostkorbDrehzahl" defaultValue={defaultValues.trRostkorbDrehzahl} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('drehzahlUeberwMax')} name="trRostkorbDrehzahlMax" defaultValue={defaultValues.trRostkorbDrehzahlMax} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('drehzahlUeberwMin')} name="trRostkorbDrehzahlMin" defaultValue={defaultValues.trRostkorbDrehzahlMin} readOnly={readOnly} unit="%" />
+                    <TonreinigerField label={t('stromgrenzeMaxWarnung')} name="trRostkorbStromMaxWarn" defaultValue={defaultValues.trRostkorbStromMaxWarn} readOnly={readOnly} unit="% IN" />
+                    <TonreinigerField label={t('stromgrenzeMinWarnung')} name="trRostkorbStromMinWarn" defaultValue={defaultValues.trRostkorbStromMinWarn} readOnly={readOnly} unit="% IN" />
+                    <TonreinigerField label={t('stromgrenzeMaxStoerung')} name="trRostkorbStromMaxStoerung" defaultValue={defaultValues.trRostkorbStromMaxStoerung} readOnly={readOnly} unit="% IN" />
+                </div>
+             </div>
+        </fieldset>
+        )}
 
         {/* Abschneider */}
         <fieldset className="border border-gray-200 rounded-lg p-4">
@@ -569,7 +624,7 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
                         name="zahnradAbschneider"
                         defaultValue={defaultValues.zahnradAbschneider}
                         disabled={readOnly}
-                        className={`bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
+                        className={`w-32 bg-white text-black border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${readOnly ? 'cursor-not-allowed disabled:bg-gray-100' : ''}`}
                     >
                         <option value="">{t('bitteWaehlen')}</option>
                         <option value="23">23</option>
@@ -605,36 +660,45 @@ const Formular: React.FC<FormularProps> = ({ initialData, onSave, onCancel, read
       </div>
 
       {/* Actions */}
-      {!readOnly && (
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex items-center gap-2 px-6 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
-            >
-              <CancelIcon />
-              {t('abbrechen')}
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-6 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
-            >
-              <SaveIcon />
-              {t('speichern')}
-            </button>
-          </div>
-      )}
-      {readOnly && (
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-              <button
+      <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 no-print">
+        {!readOnly ? (
+            <>
+                <button
                   type="button"
                   onClick={onCancel}
                   className="flex items-center gap-2 px-6 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
-              >
-                  {t('zurueckZurListe')}
-              </button>
-          </div>
-      )}
+                >
+                  <CancelIcon />
+                  {t('abbrechen')}
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-6 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
+                >
+                  <SaveIcon />
+                  {t('speichern')}
+                </button>
+            </>
+        ) : (
+            <>
+                <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-6 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                >
+                    <PrintIcon />
+                    {t('print')}
+                </button>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="flex items-center gap-2 px-6 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
+                >
+                    {t('zurueckZurListe')}
+                </button>
+            </>
+        )}
+      </div>
     </form>
   );
 };
